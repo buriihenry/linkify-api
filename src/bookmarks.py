@@ -98,3 +98,38 @@ def get_bookmark(id):
     
     
         
+@bookmarks.put('/<int:id>')
+@bookmarks.patch('/<int:id>')
+@jwt_required()
+
+def editbookmark(id):
+    current_user = get_jwt_identity()
+
+    bookmark = Bookmark.query.filter_by(user_id=current_user, id=id).first()
+
+    if not bookmark:
+        return jsonify({'messgae':'Item not found'}), HTTP_404_NOT_FOUND
+    
+    body = request.get_json().get('body', '')
+    url = request.get_json().get('url', '')  # Fix: changed from 'body' to 'url'
+        
+    if not validators.url(url):
+            
+            return jsonify({
+                'error':'Enter a valid URL'
+            }), HTTP_400_BAD_REQUEST
+    
+
+    bookmark.url = url
+    bookmark.body = body
+
+    db.session.commit()
+    return jsonify({
+            'id':bookmark.id,
+            'url': bookmark.url,
+            'short_url':bookmark.short_url,
+            'visit':bookmark.visits,
+            'body': bookmark.body,
+            'created_at': bookmark.created_at,
+            'updated_at':bookmark.updated_at,
+        }), HTTP_200_OK
