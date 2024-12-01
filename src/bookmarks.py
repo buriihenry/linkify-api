@@ -26,7 +26,9 @@ def handle_bookmarks():
                 'error':'URL already exists'
             }), HTTP_409_CONFLICT
         
+
         bookmark = Bookmark(url=url, body=body, user_id=current_user)
+
         db.session.add(bookmark)
         db.session.commit()
         
@@ -41,10 +43,15 @@ def handle_bookmarks():
         }), HTTP_201_CREATED
     
     else:  # GET method
-        bookmarks = Bookmark.query.filter_by(user_id=current_user)
+
+        page = request.args.get('page',1, type=int)
+        per_page = request.args.get('per_page',5, type=int)
+
+        bookmarks = Bookmark.query.filter_by(
+            user_id=current_user).paginate(page=page, per_page=per_page) 
         data = []
         
-        for bookmark in bookmarks:
+        for bookmark in bookmarks.items: 
             data.append({
                 'id':bookmark.id,
                 'url': bookmark.url,
@@ -54,5 +61,16 @@ def handle_bookmarks():
                 'created_at': bookmark.created_at,
                 'updated_at':bookmark.updated_at,
             })
+
+        meta = {
+            "page": bookmarks.page,
+            "pages": bookmarks.pages,
+            "total_count": bookmarks.total,
+            "prev_page": bookmarks.prev_num,
+            "next_page": bookmarks.next_num,
+            "has_next": bookmarks.has_next,
+            "has_prev": bookmarks.has_prev,
+
+        }    
         
-        return jsonify({'data':data}), HTTP_200_OK
+        return jsonify({'data':data, "meta": meta}), HTTP_200_OK
