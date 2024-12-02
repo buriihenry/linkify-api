@@ -1,3 +1,4 @@
 .env
 .flaskenv
 .flaskenv
+scr/__pycache__/*

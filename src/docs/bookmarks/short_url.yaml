@@ -1,0 +1,17 @@
+---
+tags:
+  - Bookmarks
+parameters:
+  - name: short_url
+    in: path
+    required: true
+    schema:
+      type: string
+    description: The shortened URL to be redirected.
+responses:
+  '302':
+    description: Redirects to the original URL.
+  '404':
+    description: Record not found.
+  default:
+    description: Unexpected error.

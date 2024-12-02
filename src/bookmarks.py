@@ -2,7 +2,7 @@ from flask import Blueprint, request
 import validators
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask.json import jsonify
-from src.constants.http_status_code import HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT, HTTP_201_CREATED, HTTP_200_OK, HTTP_404_NOT_FOUND
+from src.constants.http_status_code import HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT, HTTP_201_CREATED, HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_204_NO_CONTENT
 from src.database import Bookmark, db
 
 bookmarks = Blueprint("bookmarks", __name__, url_prefix="/api/v1/bookmarks")
@@ -133,3 +133,42 @@ def editbookmark(id):
             'created_at': bookmark.created_at,
             'updated_at':bookmark.updated_at,
         }), HTTP_200_OK
+
+
+@bookmarks.delete("/<int:id>")
+@jwt_required()
+def delete_bookmark(id):
+    current_user = get_jwt_identity()
+
+    bookmark = Bookmark.query.filter_by(user_id=current_user, id=id).first()
+
+    if not bookmark:
+        return jsonify({'messgae':'Item not found'}), HTTP_404_NOT_FOUND
+    
+    db.session.delete(bookmark)
+    db.session.commit()
+
+    return jsonify({}), HTTP_204_NO_CONTENT
+
+@bookmarks.get("/stats")
+@jwt_required()
+
+def get_stats():
+    current_user = get_jwt_identity()
+    
+    data = []
+
+    items = Bookmark.query.filter_by(user_id = current_user).all()
+
+    for item in items:
+        new_link = {
+            'visits':item.visits,
+            'url':item.url,
+            'id':item.id,
+            'short_url':item.short_url,
+
+        }
+
+        data.append(new_link)
+
+    return jsonify({'data':data}), HTTP_200_OK    
