@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask.json import jsonify
 from src.constants.http_status_code import HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT, HTTP_201_CREATED, HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_204_NO_CONTENT
 from src.database import Bookmark, db
+from flasgger import swag_from
 
 bookmarks = Blueprint("bookmarks", __name__, url_prefix="/api/v1/bookmarks")
 
@@ -151,7 +152,9 @@ def delete_bookmark(id):
     return jsonify({}), HTTP_204_NO_CONTENT
 
 @bookmarks.get("/stats")
+
 @jwt_required()
+@swag_from('./docs/bookmarks/stats.yaml')
 
 def get_stats():
     current_user = get_jwt_identity()
